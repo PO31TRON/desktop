@@ -351,6 +351,8 @@
     "choose_track": "Choisissez un titre dans la recherche",
     "queue": "File d'attente",
     "lyrics": "Paroles",
+    "show_lyrics": "Afficher les paroles",
+    "hide_lyrics": "Mansquer les paroles",
     "lyrics_upgraded": "Paroles améliorées !",
     "playing_from": "Lecture depuis",
     "autoplay_radio": "Radio automatique",

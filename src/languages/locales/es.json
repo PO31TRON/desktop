@@ -351,6 +351,8 @@
     "choose_track": "Elige una canción en la búsqueda",
     "queue": "Cola",
     "lyrics": "Letra",
+    "show_lyrics": "Mostrar letra",
+    "hide_lyrics": "Ocultar letra",
     "lyrics_upgraded": "¡Letra mejorada!",
     "playing_from": "Reproduciendo desde",
     "autoplay_radio": "Radio automática",

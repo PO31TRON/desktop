@@ -353,6 +353,8 @@
     "repeat": "Wiederholung",
     "previous": "Vorher",
     "open_player": "Player öffnen",
+    "show_lyrics": "Songtext anzeigen",
+    "hide_lyrics": "Songtext ausblenden",
     "next":"Weiter",
     "lyrics_upgraded": "Songtext verbessert!",
     "playing_from": "Wiedergabe von",

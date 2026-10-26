@@ -352,6 +352,8 @@
     "queue": "Очередь",
     "lyrics": "Текст",
     "lyrics_upgraded": "Текст обновлён!",
+    "show_lyrics": "Показать текст",
+    "hide_lyrics": "Скрыть текст",
     "playing_from": "Сейчас играет из",
     "autoplay_radio": "Автоплей радио",
     "clear_queue": "Очистить очередь",

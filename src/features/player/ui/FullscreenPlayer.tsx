@@ -17,7 +17,11 @@ import {
 } from "@/features/lyrics";
 import { AnimatePresence, motion } from "framer-motion";
 import { PlayerUiElements } from "./PlayerUiElements";
-import { DownLine } from "@mingcute/react";
+import {
+  DownLine,
+  EyeLine,
+  EyeCloseLine,
+} from "@mingcute/react";
 import { preloadCoverArt, useCoverSrc } from "@/features/covers";
 import "@braccato/core/element";
 import "@braccato/core/styles/variables.css";
@@ -340,6 +344,8 @@ export function FullscreenPlayer({
   }, [player.currentTrack, onClose]);
 
   const {
+    lyricsVisible,
+    setLyricsVisible,
     braccatoLyrics,
     rawFormat,
     lyricsLoading,
@@ -407,12 +413,45 @@ export function FullscreenPlayer({
       <div className="absolute inset-0 z-[1] bg-black/40" />
 
       <div className="absolute inset-0 z-10 flex">
-        <div className="flex-1 flex flex-col items-center justify-center gap-5">
-          <PlayerUiElements onClose={onClose} />
-        </div>
+        <motion.div
+          layout
+          transition={{
+            layout: {
+              duration: 0.45,
+              ease: [0.22, 1, 0.36, 1],
+            },
+          }}
+          className={
+            lyricsVisible
+              ? "w-1/2 h-full flex flex-col items-center justify-center"
+              : "w-full h-full flex flex-col items-center justify-center"
+          }
+        >
+          <motion.div
+            className="flex flex-col items-center justify-center"
+            style={{
+              width: "min(340px, 70vw, 55vh)",
+            }}
+            animate={{
+              scale: lyricsVisible ? 1 : 1.15,
+            }}
+            transition={{
+              duration: 0.45,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          >
+            <PlayerUiElements onClose={onClose} />
+          </motion.div>
+        </motion.div>
 
-        <div className="flex-1 h-full min-h-0 pl-2 pr-6 flex flex-col relative">
-          {showProviderIsland && (
+        <div
+          className={
+            lyricsVisible
+              ? "flex-1 h-full min-h-0 pl-2 pr-6 flex flex-col relative"
+              : "hidden"
+          }
+        >
+          {lyricsVisible && showProviderIsland && (
             <div className="absolute top-[12px] left-1/2 -translate-x-1/2 z-30 pointer-events-none flex justify-center">
               <LyricsProviderIsland />
             </div>
@@ -421,11 +460,11 @@ export function FullscreenPlayer({
           <div
             className="flex-1 min-h-0 relative w-full h-full"
             style={{
-              display: hasLyrics ? "flex" : "none",
+              display: hasLyrics && lyricsVisible ? "flex" : "none",
             }}
           >
             <AnimatePresence initial={false}>
-              {hasLyrics && (
+              {hasLyrics && lyricsVisible && (
                 <motion.div
                   key={`lyrics-${currentTrackId}`}
                   initial={{ opacity: 0 }}
@@ -439,8 +478,8 @@ export function FullscreenPlayer({
               )}
             </AnimatePresence>
           </div>
-
-          <AnimatePresence mode="wait">
+          {lyricsVisible && (
+            <AnimatePresence mode="wait">
             {!hasLyrics && lyricsLoading ? (
               <motion.div
                 key="skeleton"
@@ -509,16 +548,50 @@ export function FullscreenPlayer({
                 </div>
               </motion.div>
             ) : null}
-          </AnimatePresence>
+            </AnimatePresence>
+          )}
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setLyricsVisible(!lyricsVisible)}
+        aria-label={
+          lyricsVisible
+            ? t("player.hide_lyrics")
+            : t("player.show_lyrics")
+        }
+        title={
+          lyricsVisible
+            ? t("player.hide_lyrics")
+            : t("player.show_lyrics")
+        }
+        aria-pressed={!lyricsVisible}
+        data-no-window-drag
+        className="
+          absolute top-[12px] left-[52px] z-30
+          flex h-[32px] w-[32px]
+          items-center justify-center
+          rounded-lg bg-black/50
+          text-white/80 backdrop-blur-xl
+          transition-colors duration-200
+          hover:bg-white/10 hover:text-white
+          cursor-pointer
+        "
+      >
+        {lyricsVisible ? (
+          <EyeLine size={20} />
+        ) : (
+          <EyeCloseLine size={20} />
+        )}
+      </button>
 
       <button
         type="button"
         aria-label={t("player.close_fullscreen")}
         onClick={onClose}
         data-no-window-drag
-        className="absolute top-[12px] left-[12px] z-30 inline-flex h-[32px] w-[32px] items-center justify-center rounded-lg border-none bg-black/50 backdrop-blur-xl text-white/80 hover:text-white hover:bg-white/10 active:scale-[0.94] transition-all cursor-pointer select-none pointer-events-auto"
+        className="absolute top-[12px] right-[12px] z-30 inline-flex h-[32px] w-[32px] items-center justify-center rounded-lg border-none bg-black/50 backdrop-blur-xl text-white/80 hover:text-white hover:bg-white/10 active:scale-[0.94] transition-all cursor-pointer select-none pointer-events-auto"
       >
         <DownLine size={18} />
       </button>

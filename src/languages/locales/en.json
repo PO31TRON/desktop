@@ -356,6 +356,8 @@
     "open_player": "Open player",
     "next":"Next",
     "repeat": "Repeat",
+    "show_lyrics": "Show lyrics",
+    "hide_lyrics": "Hide lyrics",
     "lyrics_upgraded": "Lyrics upgraded!",
     "playing_from": "Playing from",
     "autoplay_radio": "Autoplay Radio",

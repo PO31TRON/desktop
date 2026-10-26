@@ -349,6 +349,8 @@
     "choose_track": "Scegli un brano dalla ricerca",
     "queue": "Coda",
     "lyrics": "Testo",
+    "show_lyrics": "Mostra testo",
+    "hide_lyrics": "Nascondi testo",
     "lyrics_upgraded": "Testo aggiornato!",
     "playing_from": "In riproduzione da",
     "autoplay_radio": "Radio automatica",

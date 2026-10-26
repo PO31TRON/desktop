@@ -349,6 +349,8 @@
     "choose_track": "Aramadan bir parça seç",
     "queue": "Sıra",
     "lyrics": "Şarkı sözleri",
+    "show_lyrics": "Şarkı sözlerini göster",
+    "hide_lyrics": "Şarkı sözlerini gizle",
     "lyrics_upgraded": "Şarkı sözleri güncellendi!",
     "playing_from": "Çalınan yer",
     "autoplay_radio": "Otomatik radyo",

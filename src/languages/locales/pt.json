@@ -360,6 +360,8 @@
     "open_player": "Abrir o player",
     "next": "Próxima",
     "repeat": "Repetir",
+    "show_lyrics": "Mostrar letra",
+    "hide_lyrics": "Ocultar letra",
     "lyrics_upgraded": "Letras aprimoradas!",
     "playing_from": "Tocando de",
     "autoplay_radio": "Rádio automática",

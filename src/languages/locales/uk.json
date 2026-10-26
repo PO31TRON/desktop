@@ -351,6 +351,8 @@
     "choose_track": "Виберіть трек в пошуку",
     "queue": "Черга",
     "lyrics": "Текст",
+    "show_lyrics": "Показати текст",
+    "hide_lyrics": "Приховати текст",
     "lyrics_upgraded": "Текст оновлено!",
     "playing_from": "Зараз грає з",
     "autoplay_radio": "Автоплей радіо",

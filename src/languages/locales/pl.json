@@ -353,6 +353,8 @@
     "choose_track": "Wybierz utwór w wyszukiwarce",
     "queue": "Kolejka",
     "lyrics": "Tekst",
+    "show_lyrics": "Pokaż tekst utworu",
+    "hide_lyrics": "Ukryj tekst utworu",
     "lyrics_upgraded": "Tekst zaktualizowany!",
     "playing_from": "Odtwarzanie z",
     "autoplay_radio": "Radio automatyczne",

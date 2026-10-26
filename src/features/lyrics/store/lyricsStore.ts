@@ -47,6 +47,8 @@ export function hasSyncedLyricsSources(
 }
 
 export interface LyricsState {
+  lyricsVisible: boolean;
+  setLyricsVisible: (visible: boolean) => void;
   lyricsLoading: boolean;
   lyricsError: string | null;
   rawLyrics: string | null;
@@ -91,6 +93,8 @@ const LYRICS_SESSION_STORAGE_KEY = "liner_lyrics_session_v1";
 export const useLyricsStore = create<LyricsState>()(
   persist(
     (set, get) => ({
+      lyricsVisible: true,
+      setLyricsVisible: (visible) => set({ lyricsVisible: visible }),
       lyricsLoading: false,
       lyricsError: null,
       rawLyrics: null,
@@ -271,6 +275,7 @@ export const useLyricsStore = create<LyricsState>()(
       partialize: (state) => ({
         currentLyricsTrackId: state.currentLyricsTrackId,
         trackOffsets: state.trackOffsets,
+        lyricsVisible: state.lyricsVisible,
       }),
     },
   ),
