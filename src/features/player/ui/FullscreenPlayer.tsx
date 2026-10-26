@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  createElement,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, createElement, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { shouldReleaseTopPin, startsPinnedToTop } from "./lyricsTopPin";
 import { usePlayerState } from "../hooks/usePlayerState";
@@ -13,7 +7,6 @@ import {
   useLyricsStore,
   LyricsProviderIsland,
   braccatoThemeCss,
-  hasSyncedLyricsSources,
 } from "@/features/lyrics";
 import { AnimatePresence, motion } from "framer-motion";
 import { PlayerUiElements } from "./PlayerUiElements";
@@ -134,112 +127,122 @@ function BraccatoLyricsView({ lyrics }: BraccatoLyricsViewProps) {
   const handleUserInteractionRef = useRef(handleUserInteraction);
   handleUserInteractionRef.current = handleUserInteraction;
 
-  const setElement = useCallback((el: any) => {
-    elementRef.current = el;
-    if (!el) return;
-    el.theme = braccatoThemeCss;
-    el.lyrics = latestLyricsRef.current;
-    el.source = "#liner-audio";
+  const setElement = useCallback(
+    (el: any) => {
+      elementRef.current = el;
+      if (!el) return;
+      el.theme = braccatoThemeCss;
+      el.lyrics = latestLyricsRef.current;
+      el.source = "#liner-audio";
 
-    const handleBraccatoLineClick = (e: Event) => {
-      const isAudioLoading = playerEngine.getSnapshot().status === "loading";
-      if (isAudioLoading) {
-        waitingForAudioAfterClickRef.current = true;
-        isInFreeSearchRef.current = true;
+      const handleBraccatoLineClick = (e: Event) => {
+        const isAudioLoading = playerEngine.getSnapshot().status === "loading";
+        if (isAudioLoading) {
+          waitingForAudioAfterClickRef.current = true;
+          isInFreeSearchRef.current = true;
+          if (freeScrollTimerRef.current) {
+            clearTimeout(freeScrollTimerRef.current);
+            freeScrollTimerRef.current = null;
+          }
+          if (el.renderer) {
+            el.renderer.noteUserScroll?.();
+            el.renderer.noteUserScroll?.();
+            el.renderer.noteUserScroll?.();
+          }
+        } else {
+          returnToFollowingModeRef.current();
+        }
+
+        const detail = (e as CustomEvent).detail as
+          { timeS?: number; time?: number } | undefined;
+        const timeMs =
+          detail?.timeS !== undefined
+            ? Math.round(detail.timeS * 1000)
+            : detail?.time !== undefined
+              ? detail.time > 1000
+                ? Math.round(detail.time)
+                : Math.round(detail.time * 1000)
+              : null;
+        if (timeMs !== null) {
+          playerEngine.seek(timeMs, true);
+        }
+      };
+
+      const onUserScroll = () => {
+        handleUserInteractionRef.current();
+      };
+
+      const onLyricsLoaded = () => {
+        if (waitingForAudioAfterClickRef.current) return;
+        requestAnimationFrame(() => {
+          if (!waitingForAudioAfterClickRef.current) {
+            scrollToActiveLine("auto");
+          }
+        });
+      };
+
+      let syncRafId: number;
+      let lastReportedIndex = -1;
+
+      const checkActiveLine = () => {
+        const audioEl = document.getElementById(
+          "liner-audio",
+        ) as HTMLAudioElement | null;
+        if (audioEl && !Number.isNaN(audioEl.currentTime)) {
+          const currentMs = audioEl.currentTime * 1000;
+          const lines = useLyricsStore.getState().syncedLines;
+          let idx = -1;
+          for (let i = 0; i < lines.length; i++) {
+            const prevEnd =
+              i > 0 && lines[i - 1].words && lines[i - 1].words!.length > 0
+                ? lines[i - 1].words![lines[i - 1].words!.length - 1].endMs
+                : i > 0
+                  ? lines[i - 1].timeMs
+                  : 0;
+            const targetEarlyMs = Math.max(prevEnd, lines[i].timeMs - 600);
+            if (targetEarlyMs <= currentMs) {
+              idx = i;
+            } else {
+              break;
+            }
+          }
+          if (idx !== lastReportedIndex) {
+            lastReportedIndex = idx;
+            useLyricsStore.getState().setActiveLineIndex(idx >= 0 ? idx : null);
+          }
+        }
+        syncRafId = requestAnimationFrame(checkActiveLine);
+      };
+
+      syncRafId = requestAnimationFrame(checkActiveLine);
+
+      el.addEventListener("braccato:lyrics-loaded", onLyricsLoaded);
+      el.addEventListener("braccato:line-click", handleBraccatoLineClick);
+      el.addEventListener("wheel", onUserScroll, {
+        passive: true,
+        capture: true,
+      });
+      el.addEventListener("touchmove", onUserScroll, {
+        passive: true,
+        capture: true,
+      });
+
+      return () => {
+        cancelAnimationFrame(syncRafId);
+        useLyricsStore.getState().setActiveLineIndex(null);
+        el.removeEventListener("braccato:lyrics-loaded", onLyricsLoaded);
+        el.removeEventListener("braccato:line-click", handleBraccatoLineClick);
+        el.removeEventListener("wheel", onUserScroll, { capture: true });
+        el.removeEventListener("touchmove", onUserScroll, { capture: true });
         if (freeScrollTimerRef.current) {
           clearTimeout(freeScrollTimerRef.current);
           freeScrollTimerRef.current = null;
         }
-        if (el.renderer) {
-          el.renderer.noteUserScroll?.();
-          el.renderer.noteUserScroll?.();
-          el.renderer.noteUserScroll?.();
-        }
-      } else {
-        returnToFollowingModeRef.current();
-      }
-
-      const detail = (e as CustomEvent).detail as
-        | { timeS?: number; time?: number }
-        | undefined;
-      const timeMs =
-        detail?.timeS !== undefined
-          ? Math.round(detail.timeS * 1000)
-          : detail?.time !== undefined
-            ? detail.time > 1000
-              ? Math.round(detail.time)
-              : Math.round(detail.time * 1000)
-            : null;
-      if (timeMs !== null) {
-        playerEngine.seek(timeMs, true);
-      }
-    };
-
-    const onUserScroll = () => {
-      handleUserInteractionRef.current();
-    };
-
-    const onLyricsLoaded = () => {
-      if (waitingForAudioAfterClickRef.current) return;
-      requestAnimationFrame(() => {
-        if (!waitingForAudioAfterClickRef.current) {
-          scrollToActiveLine("auto");
-        }
-      });
-    };
-
-    let syncRafId: number;
-    let lastReportedIndex = -1;
-
-    const checkActiveLine = () => {
-      const audioEl = document.getElementById("liner-audio") as HTMLAudioElement | null;
-      if (audioEl && !Number.isNaN(audioEl.currentTime)) {
-        const currentMs = audioEl.currentTime * 1000;
-        const lines = useLyricsStore.getState().syncedLines;
-        let idx = -1;
-        for (let i = 0; i < lines.length; i++) {
-          const prevEnd =
-            i > 0 && lines[i - 1].words && lines[i - 1].words!.length > 0
-              ? lines[i - 1].words![lines[i - 1].words!.length - 1].endMs
-              : i > 0
-                ? lines[i - 1].timeMs
-                : 0;
-          const targetEarlyMs = Math.max(prevEnd, lines[i].timeMs - 600);
-          if (targetEarlyMs <= currentMs) {
-            idx = i;
-          } else {
-            break;
-          }
-        }
-        if (idx !== lastReportedIndex) {
-          lastReportedIndex = idx;
-          useLyricsStore.getState().setActiveLineIndex(idx >= 0 ? idx : null);
-        }
-      }
-      syncRafId = requestAnimationFrame(checkActiveLine);
-    };
-
-    syncRafId = requestAnimationFrame(checkActiveLine);
-
-    el.addEventListener("braccato:lyrics-loaded", onLyricsLoaded);
-    el.addEventListener("braccato:line-click", handleBraccatoLineClick);
-    el.addEventListener("wheel", onUserScroll, { passive: true, capture: true });
-    el.addEventListener("touchmove", onUserScroll, { passive: true, capture: true });
-
-    return () => {
-      cancelAnimationFrame(syncRafId);
-      useLyricsStore.getState().setActiveLineIndex(null);
-      el.removeEventListener("braccato:lyrics-loaded", onLyricsLoaded);
-      el.removeEventListener("braccato:line-click", handleBraccatoLineClick);
-      el.removeEventListener("wheel", onUserScroll, { capture: true });
-      el.removeEventListener("touchmove", onUserScroll, { capture: true });
-      if (freeScrollTimerRef.current) {
-        clearTimeout(freeScrollTimerRef.current);
-        freeScrollTimerRef.current = null;
-      }
-      elementRef.current = null;
-    };
-  }, [scrollToActiveLine]);
+        elementRef.current = null;
+      };
+    },
+    [scrollToActiveLine],
+  );
 
   useEffect(() => {
     latestLyricsRef.current = lyrics;
@@ -347,11 +350,9 @@ export function FullscreenPlayer({
     lyricsVisible,
     setLyricsVisible,
     braccatoLyrics,
-    rawFormat,
     lyricsLoading,
     lyricsError,
     plainLyrics,
-    activeProvider,
     availableProviders,
     currentLyricsTrackId,
   } = useLyricsStore();
@@ -372,15 +373,11 @@ export function FullscreenPlayer({
   }, [coverUrl, nextCoverUrl]);
 
   const currentTrackId = player.currentTrack?.id;
-  const isMatchingTrack = Boolean(currentTrackId && currentLyricsTrackId === currentTrackId);
-  const hasLyrics = isMatchingTrack && braccatoLyrics.length > 0;
-  const hasSyncedSources = hasSyncedLyricsSources(
-    availableProviders,
-    braccatoLyrics,
-    rawFormat,
+  const isMatchingTrack = Boolean(
+    currentTrackId && currentLyricsTrackId === currentTrackId,
   );
-  const showProviderIsland =
-    hasLyrics && (hasSyncedSources || availableProviders.length > 1);
+  const hasLyrics = isMatchingTrack && braccatoLyrics.length > 0;
+  const showProviderIsland = hasLyrics && availableProviders.length > 0;
   const isInstrumental =
     isMatchingTrack &&
     !lyricsLoading &&
@@ -399,10 +396,14 @@ export function FullscreenPlayer({
           className="absolute inset-0"
           style={{ backgroundColor: "var(--color-bg-primary)" }}
         />
-        {kawarpSrc && !kawarpShown && (
+        {(kawarpSrc || coverUrl) && !kawarpShown && (
           <div
-            className="absolute inset-0 bg-cover bg-center filter blur-3xl scale-110 opacity-70 pointer-events-none"
-            style={{ backgroundImage: `url(${kawarpSrc})` }}
+            className="absolute inset-0 bg-cover bg-center pointer-events-none"
+            style={{
+              backgroundImage: `url(${kawarpSrc || coverUrl})`,
+              filter: "blur(64px) saturate(1.3)",
+              transform: "scale(1.3)",
+            }}
           />
         )}
         {effectsReady ? (
@@ -452,7 +453,7 @@ export function FullscreenPlayer({
           }
         >
           {lyricsVisible && showProviderIsland && (
-            <div className="absolute top-[12px] left-1/2 -translate-x-1/2 z-30 pointer-events-none flex justify-center">
+            <div className="absolute top-[6px] left-1/2 -translate-x-1/2 z-30 pointer-events-none flex justify-center">
               <LyricsProviderIsland />
             </div>
           )}
@@ -569,7 +570,7 @@ export function FullscreenPlayer({
         aria-pressed={!lyricsVisible}
         data-no-window-drag
         className="
-          absolute top-[12px] left-[52px] z-30
+          absolute top-[6px] left-[46px] z-30
           flex h-[32px] w-[32px]
           items-center justify-center
           rounded-lg bg-black/50
@@ -591,7 +592,7 @@ export function FullscreenPlayer({
         aria-label={t("player.close_fullscreen")}
         onClick={onClose}
         data-no-window-drag
-        className="absolute top-[12px] right-[12px] z-30 inline-flex h-[32px] w-[32px] items-center justify-center rounded-lg border-none bg-black/50 backdrop-blur-xl text-white/80 hover:text-white hover:bg-white/10 active:scale-[0.94] transition-all cursor-pointer select-none pointer-events-auto"
+        className="absolute top-[6px] left-[6px] z-30 inline-flex h-[32px] w-[32px] items-center justify-center rounded-lg border-none bg-black/50 backdrop-blur-xl text-white/80 hover:text-white hover:bg-white/10 active:scale-[0.94] transition-all cursor-pointer select-none pointer-events-auto"
       >
         <DownLine size={18} />
       </button>
